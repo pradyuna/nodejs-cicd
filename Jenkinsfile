@@ -1,39 +1,28 @@
 pipeline {
-    agent { label "dev-server"}
-    
+    agent {label "dev-agent"}
     stages {
-        
-        stage("code"){
-            steps{
-                git url: "https://github.com/LondheShubham153/node-todo-cicd.git", branch: "master"
-                echo 'bhaiyya code clone ho gaya'
+        stage("code clone") {
+            steps {
+                git url: "https://github.com/pradyuna/nodejs-cicd.git" , branch: "master"
             }
         }
-        stage("build and test"){
-            steps{
-                sh "docker build -t node-app-test-new ."
-                echo 'code build bhi ho gaya'
+        stage("build") {
+            steps {
+                sh "docker build . -t pradyumna810/my-nodjs-cicd-todoapp:latest"
             }
         }
-        stage("scan image"){
-            steps{
-                echo 'image scanning ho gayi'
-            }
-        }
-        stage("push"){
-            steps{
-                withCredentials([usernamePassword(credentialsId:"dockerHub",passwordVariable:"dockerHubPass",usernameVariable:"dockerHubUser")]){
-                sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                sh "docker tag node-app-test-new:latest ${env.dockerHubUser}/node-app-test-new:latest"
-                sh "docker push ${env.dockerHubUser}/node-app-test-new:latest"
-                echo 'image push ho gaya'
+        stage("docker login & push image") {
+            steps {
+                echo "logging into dockerhub & pushing the image"
+                withCredentials([usernamePassword(credentialsId: "Dockerhub" , passwordVariable: "dockerhubpassword", usernameVariable: "dockerUser")]) {
+                    sh "docker login -u ${env.dockerUser} -p ${env.dockerhubpassword}"
+                    sh "docker push pradyumna810/my-nodjs-cicd-todoapp:latest"
                 }
             }
         }
-        stage("deploy"){
-            steps{
-                sh "docker-compose down && docker-compose up -d"
-                echo 'deployment ho gayi'
+        stage("deploy") {
+            steps {
+                sh "docker run -d -p 8000:8000 pradyumna810/my-nodjs-cicd-todoapp:latest"
             }
         }
     }
